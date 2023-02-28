@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedStore | Ecommerce Website Design</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/js-snackbar.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/fontawesome.min.css">
+    <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.css">
+    <script src="/node_modules/jquery/dist/jquery.js"></script>
+    <script src="/node_modules/socket.io/client-dist/socket.io.js"></script>
+    <!-- <script src ="js-snackbar.css"></script> -->
+    <!-- <script>
+        $(()=>{
+            var socket=io.connect("http://localhost:9595");
+            socket.on('success', m=>{
+                //console.log(m);
+                $('#pconnect').show();
+                //Events
+                socket.on('userlist',list=>{
+                    $("#users").empty();
+                    list.forEach(x=>{
+                        $("#users").append(`<li>${x}</li>`)
+                    });
+                    $("#pconnect").hide();
+                    $("#pchat").show();
+                });
+                socket.on('message', data=>{
+                    $("#messages").append(`<li>${data.from}: ${data.msg}</li>`);
+                });
+                //Connect Button Click
+                $("#bconnect").click(()=>{
+                    socket.emit('join', $("#dname").val());
+                })
+                //Send Button Click
+                $("#bsend").click(()=>{
+                    socket.emit('send', $("#msg").val());
+                    $("#messages").append(`<li>Your Message: ${$("#msg").val()}</li>`);
+                    $("#msg").val('');
+                });
+            });
+        });
+    </script> -->
+    <script>
+		$(() => {
+			var socket = io('http://localhost:9595');
+			socket.on('connect', () => {
+				var loader = new SocketIOFileUpload(socket);
+				loader.listenOnInput(document.getElementById("fu"))
+				loader.listenOnDrop(document.getElementById("drop"));
+				$('#pconnect').show();
+				$('#connect').click(() => {
+                    alert($('#dname').val())
+					socket.emit('register', $('#dname').val());
+				});
+				$('#send').click(() => {
+					socket.emit('chat', $('#msg').val());
+				});
+				$('#browse').click(() => {
+					$('#fu').trigger('click');
+				});
+				socket.on('regsuccess', name => {
+					//console.log(name);
+					$("#hname").html(name);
+					$('#pconnect').hide();
+					$('#pchat').show();
+				});
+				socket.on('userlist', names => {
+					console.log(names);
+					$('#users').empty(),
+						names.forEach(n => {
+							$('#users').append(`<li>${n}</li>`);
+						});
+				});
+				socket.on('message', m => {
+
+					$('#messages').append(`<li>${m.from}: ${m.msg}</li>`);
+
+				});
+				socket.on('uploaded', m => {
+
+					console.log(m);
+					$('#files').append(`<figure>
+						<img src="uploads/${m.type=='image' ? m.file: 'file.png'}" />
+						<figcaption>Uploaded by ${m.from}</figcaption>
+						<a target='_blank' href="uploads/${m.file}">Download</a>
+					</figure>`);
+				});
+				loader.addEventListener("complete", function (event) {
+					console.log(event.success);
+					SnackBar({
+						message: `${event.file.name} uploaded`,
+						position: "bc"
+					});
+				});
+			});
+			
+		});
+	</script>
+</head>
+<body>
+
+<div class="header">
+    <div class="container">
+        <div class="navbar">
+            <div class="logo">
+                <img src="/images/logo2.png" width="150px">
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="categories.html">Products Categories</a></li>
+                    <li><a href="featured.html">Featured Products</a></li>
+                    <li><a href="products.html">Latest Products</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="messaging.html">Messaging</a></li>
+                </ul>
+            </nav>
+            <img src="/images/bitcoin.png" width="30px" height="30px">
+        </div>
+    </div>
+</div>
+<div class="container main">
+    <div id="pconnect" style="display: none;">
+       <input placeholder="display name.." type="text" id="dname" class="text-grow" /><button type="button" id="connect" class="btn">Connect</button>
+    </div>
+    <div id="pchat" style="display: none;" class="my-2">
+       <div class="c-1">
+           <div class='list-header'>Users</div>
+           <ul class='list' id="users">
+
+           </ul>
+       </div>
+       <div class="c-2">
+           <div><h3 id="hname"></h3></div>
+           <div class="flex">
+               <input placeholder="message..." type="text" id="msg" class="text-grow" /><button type="button" id="send" class="btn">Send</button><button type="button" id="browse" class="btn">Browse</button>
+           </div>
+           <div id="drop" class="my-1">
+               Drop files here
+           </div>
+           <div id="pmessages">
+               <div class='list-header mt'>Messages</div>
+               <ul class='list' id="messages"></ul>
+           </div>
+           <div id="files" class="files"></div>
+       </div>
+    </div>  
+</div>
+<!-- <div class="message-container">
+    <div class="panel" id="pconnect" style="display:none;">
+        <div class="c1"></div>
+        <div class="c2 flex">
+            <input placeholder="Display Name....." id="dname" class="ctrl"/><button class="btn-m" id="bconnect"><h3>Connect</h3></button>
+        </div>
+        <div class="c1"></div>
+    </div>
+    <div class="panel flex" id="pchat" style="display: none;">
+        <div class="c1">
+            <h2>Connected</h2>
+            <ul id="users" class="list">
+
+            </ul>
+        </div>
+        <div class="c3">
+            <div class="flex">
+                <input placeholder="Message....." id="msg" class="ctrl"/><button class="btn" id="bsend"><h3>Send</h3></button>
+            </div>
+            <div>
+                <h2>Messages</h2>
+                <ul id="messages" class="list">
+
+                </ul>
+            </div>
+        </div>
+    </div> -->
+</div>
+<!-- ----testimonial---- -->
+<div class="testimonial">
+    <div class="small-container">
+        <div class="row">
+            <div class="col-3">
+                <i class="fa fa-quote-left"></i>
+                <p>Since the online environment gives consumer a wider choice of products and product platforms, the exact consumer behaviour portrayed in an e-commerce environment.</p>
+                <div class="rating">
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star-half-o"></i>
+                    <i class="fa fa-star-o"></i>
+                </div>
+                <img src="/images/gomez_benjamin.jpg" alt="">
+                <h3>Gomez Benjamin</h3>
+            </div>
+            <div class="col-3">
+                <i class="fa fa-quote-left"></i>
+                <p>Today, online shopping has become a great phenomenon thanks to the rapid development of internet security technologies and a similar pace in the penetration of the World Wide Web.</p>
+                <div class="rating">
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star-half-o"></i>
+                    <i class="fa fa-star-o"></i>
+                    <i class="fa fa-star-o"></i>
+                </div>
+                <img src="/images/Mike Smith.jpg" alt="">
+                <h3>Gomez Benjamin</h3>
+            </div>
+            <div class="col-3">
+                <i class="fa fa-quote-left"></i>
+                <p>The aim is to find respondents who are the potential, if not actual customers of our online products who fall within the category of youths and young adults described in the introduction.</p>
+                <div class="rating">
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                </div>
+                <img src="/images/Sean Parker.jpg" alt="">
+                <h3>Gomez Benjamin</h3>
+            </div>
+        </div>
+    </div>
+</div>
+<!------------brands----------->
+<div class="brands">
+    <div class="small-container">
+        <div class="row">
+            <div class="col-5">
+                <img src="/images/brand_01(ShurjoMukhi Ltd).png">
+            </div>
+            <div class="col-5">
+                <img src="/images/brand_02(Lenovo Legion Gaming).png">
+            </div>
+            <div class="col-5">
+                <img src="/images/brand_03(Doz & Company Pvt. Ltd).png">
+            </div>
+            <div class="col-5">
+                <img src="/images/brand_04(Nike).png">
+            </div>
+            <div class="col-5">
+                <img src="/images/brand_05(Apex Footwear Ltd).jpg">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- -------footer-------- -->
+<div class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="footer-col-1">
+                <h3>Download App</h3>
+                <p>App for Android & IOS</p>
+            <div class="app-logo">
+                <img src="/images/play-strore.png">
+                <img src="/images/app-store.png">
+            </div>
+            </div>
+            <div class="footer-col-2">
+                <img src="/images/F1Soft.png">
+                <p>Our Purpose is Benefits of Sports Accesible.</p>
+            </div>
+            <div class="footer-col-3">
+                <h3>Useful Links</h3>
+                <ul>
+                    <li>Coupons</li>
+                    <li>Blog Post</li>
+                    <li>Return Policy</li>
+                    <li>Join Affiliate</li>
+                </ul>
+            </div>
+            <div class="footer-col-4">
+                <h3>Follow Us</h3>
+                <ul>
+                    <li>Facebook</li>
+                    <li>Twitter</li>
+                    <li>Instagram</li>
+                    <li>YouTube</li>
+                </ul>
+            </div>
+        </div>
+        <hr>
+            <p class="copyright">Copyright 2022 - Easy Tutorials</p>
+    </div>
+</div>
+<input type='file' id='fu' style='display:none;' />
+</body>
+</html>
